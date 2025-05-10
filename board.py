@@ -27,6 +27,9 @@ for r, c in mines:
 
 last_move = (-1, -1)
 
+def color_text(text, color_code):
+    return f"\033[{color_code}m{text}\033[0m"
+
 def print_board():
     print("\nPapan:")
     for i in range(ROWS):
@@ -35,15 +38,17 @@ def print_board():
             cell_str = ''
             if revealed[i][j]:
                 if board[i][j] == -1:
-                    cell_str = '*'
+                    cell_str = color_text('*', '1;31')  # merah tebal
                 elif board[i][j] == 0:
                     cell_str = '.'
                 else:
-                    cell_str = f'{board[i][j]}'
+                    color_map = {'1': '1;34', '2': '1;32', '3': '1;31', '4': '1;35', '5': '1;36', '6': '1;33', '7': '1;34', '8': '1;32'}
+                    color_code = color_map.get(str(board[i][j]), '1;37')
+                    cell_str = color_text(str(board[i][j]), color_code)
             elif flagged[i][j]:
-                cell_str = '?'
+                cell_str = color_text('⚑', '1;33')  # kuning tebal, simbol flag
             else:
-                cell_str = 'X'
+                cell_str = color_text('X', '1;37')  # putih tebal
 
             if (i, j) == last_move:
                 row_str += f'[{cell_str}] '
@@ -88,7 +93,7 @@ def check_win():
 while True:
     print_board()
     if check_win():
-        print("\nSelamat! Anda menang!")
+        print("\n\033[1;32mSelamat! Anda menang!\033[0m")
         break
 
     try:
@@ -112,7 +117,7 @@ while True:
                 if board[r][c] == -1:
                     reveal_all_mines()
                     print_board()
-                    print("BOOM! Kena bom. Game over!")
+                    print("\033[1;31mBOOM! Kena bom. Game over!\033[0m")
                     break
                 elif board[r][c] == 0:
                     reveal_area(r, c)
