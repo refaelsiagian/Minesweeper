@@ -1,28 +1,23 @@
 import random
 from collections import deque
 
-# Ukuran papan
 ROWS = 10
 COLS = 10
 NUM_MINES = 10
 
-# Inisialisasi papan kosong
 board = [[0 for _ in range(COLS)] for _ in range(ROWS)]
 revealed = [[False for _ in range(COLS)] for _ in range(ROWS)]
 flagged = [[False for _ in range(COLS)] for _ in range(ROWS)]
 
-# Sebar bom secara acak
 mines = set()
 while len(mines) < NUM_MINES:
     r = random.randint(0, ROWS - 1)
     c = random.randint(0, COLS - 1)
     mines.add((r, c))
 
-# Tandai bom di papan
 for r, c in mines:
     board[r][c] = -1
 
-# Hitung angka di sekitar bom
 for r, c in mines:
     for dr in [-1, 0, 1]:
         for dc in [-1, 0, 1]:
@@ -30,7 +25,6 @@ for r, c in mines:
             if 0 <= nr < ROWS and 0 <= nc < COLS and board[nr][nc] != -1:
                 board[nr][nc] += 1
 
-# Posisi terakhir yang dipilih
 last_move = (-1, -1)
 
 def print_board():
@@ -39,15 +33,15 @@ def print_board():
         row_str = ''
         for j in range(COLS):
             cell_str = ''
-            if flagged[i][j]:
-                cell_str = '?'
-            elif revealed[i][j]:
+            if revealed[i][j]:
                 if board[i][j] == -1:
                     cell_str = '*'
                 elif board[i][j] == 0:
                     cell_str = '.'
                 else:
                     cell_str = f'{board[i][j]}'
+            elif flagged[i][j]:
+                cell_str = '?'
             else:
                 cell_str = 'X'
 
@@ -64,7 +58,7 @@ def reveal_area(r, c):
 
     while queue:
         cr, cc = queue.popleft()
-        if (cr, cc) in visited:
+        if (cr, cc) in visited or revealed[cr][cc]:
             continue
         visited.add((cr, cc))
         revealed[cr][cc] = True
@@ -73,15 +67,30 @@ def reveal_area(r, c):
             for dr in [-1, 0, 1]:
                 for dc in [-1, 0, 1]:
                     nr, nc = cr + dr, cc + dc
-                    if 0 <= nr < ROWS and 0 <= nc < COLS and (nr, nc) not in visited:
+                    if 0 <= nr < ROWS and 0 <= nc < COLS:
                         queue.append((nr, nc))
 
 def reveal_all_mines():
     for r, c in mines:
         revealed[r][c] = True
 
+def check_win():
+    all_clear = True
+    all_flags_correct = True
+    for i in range(ROWS):
+        for j in range(COLS):
+            if board[i][j] != -1 and not revealed[i][j]:
+                all_clear = False
+            if flagged[i][j] != ((i, j) in mines):
+                all_flags_correct = False
+    return all_clear or all_flags_correct
+
 while True:
     print_board()
+    if check_win():
+        print("\nSelamat! Anda menang!")
+        break
+
     try:
         inp = input("Masukkan koordinat + opsi (baris kolom o/f), misal 3 4 o (open) atau 3 4 f (flag): ")
         parts = inp.strip().split()
@@ -91,6 +100,9 @@ while True:
         r, c, action = int(parts[0]) - 1, int(parts[1]) - 1, parts[2].lower()
         if 0 <= r < ROWS and 0 <= c < COLS:
             last_move = (r, c)
+            if revealed[r][c]:
+                print("Kotak ini sudah terbuka!")
+                continue
             if action == 'f':
                 flagged[r][c] = not flagged[r][c]
             elif action == 'o':
@@ -99,7 +111,6 @@ while True:
                     continue
                 if board[r][c] == -1:
                     reveal_all_mines()
-                    revealed[r][c] = True
                     print_board()
                     print("BOOM! Kena bom. Game over!")
                     break
