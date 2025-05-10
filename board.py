@@ -64,6 +64,7 @@ def reveal_area(r, c):
                     if 0 <= nr < ROWS and 0 <= nc < COLS and (nr, nc) not in visited:
                         queue.append((nr, nc))
 
+
 # Main loop
 while True:
     print_board()
