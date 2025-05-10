@@ -9,6 +9,7 @@ NUM_MINES = 10
 # Inisialisasi papan kosong
 board = [[0 for _ in range(COLS)] for _ in range(ROWS)]
 revealed = [[False for _ in range(COLS)] for _ in range(ROWS)]
+flagged = [[False for _ in range(COLS)] for _ in range(ROWS)]
 
 # Sebar bom secara acak
 mines = set()
@@ -38,7 +39,9 @@ def print_board():
         row_str = ''
         for j in range(COLS):
             cell_str = ''
-            if revealed[i][j]:
+            if flagged[i][j]:
+                cell_str = '?'
+            elif revealed[i][j]:
                 if board[i][j] == -1:
                     cell_str = '*'
                 elif board[i][j] == 0:
@@ -80,22 +83,32 @@ def reveal_all_mines():
 while True:
     print_board()
     try:
-        inp = input("Masukkan koordinat (baris kolom, mulai dari 1), misal 3 4: ")
-        r, c = map(int, inp.strip().split())
-        r -= 1
-        c -= 1
+        inp = input("Masukkan koordinat + opsi (baris kolom o/f), misal 3 4 o (open) atau 3 4 f (flag): ")
+        parts = inp.strip().split()
+        if len(parts) != 3:
+            print("Format input salah!")
+            continue
+        r, c, action = int(parts[0]) - 1, int(parts[1]) - 1, parts[2].lower()
         if 0 <= r < ROWS and 0 <= c < COLS:
             last_move = (r, c)
-            if board[r][c] == -1:
-                reveal_all_mines()
-                revealed[r][c] = True
-                print_board()
-                print("BOOM! Kena bom. Game over!")
-                break
-            elif board[r][c] == 0:
-                reveal_area(r, c)
+            if action == 'f':
+                flagged[r][c] = not flagged[r][c]
+            elif action == 'o':
+                if flagged[r][c]:
+                    print("Kotak ini sedang di-flag, unflag dulu untuk buka.")
+                    continue
+                if board[r][c] == -1:
+                    reveal_all_mines()
+                    revealed[r][c] = True
+                    print_board()
+                    print("BOOM! Kena bom. Game over!")
+                    break
+                elif board[r][c] == 0:
+                    reveal_area(r, c)
+                else:
+                    revealed[r][c] = True
             else:
-                revealed[r][c] = True
+                print("Aksi tidak dikenali! Gunakan 'o' (open) atau 'f' (flag).")
         else:
             print("Koordinat di luar papan!")
     except Exception as e:
